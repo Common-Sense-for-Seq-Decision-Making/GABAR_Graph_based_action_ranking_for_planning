@@ -181,7 +181,7 @@
           <div class="column has-text-centered">
             <div class="publication-links">
               <span class="link-block">
-                <a href="./resources/GABAR_NEURIPS_ARXIV.pdf"
+                <a href="./resources/GABAR_NeurIPS_Camera_ready.pdf"
                    class="external-link button is-normal is-rounded is-dark">
                   <span class="icon">
                       <i class="fas fa-file-pdf"></i>
@@ -228,7 +228,8 @@
         <h2 class="title is-2 has-text-centered">Abstract</h2>
         <div class="content has-text-justified">
           <p>
-            We propose a novel approach to learn relational policies for classical planning based on learning to rank actions. We introduce a new graph representation that explicitly captures action information and propose a Graph Neural Network architecture augmented with Gated Recurrent Units (GRUs) to learn action rankings. Our model is trained on small problem instances and generalizes to significantly larger instances where traditional planning becomes computationally expensive. Experimental results across standard planning benchmarks demonstrate that our action-ranking approach achieves generalization to significantly larger problems than those used in training.
+            We propose a novel approach to learn relational policies for classical planning based on learning to rank actions. We introduce a new graph representation that explicitly captures action information and propose a Graph Neural Network (GNN) architecture augmented with Gated Recurrent Units (GRUs) to learn action rankings. Unlike value-function based approaches that must learn a globally consistent function, our action ranking method only needs to learn locally consistent ranking. Our model is trained on data generated from small problem instances that are easily solved by planners and is applied to significantly larger instances where planning is computationally prohibitive. Experimental results across standard planning benchmarks demonstrate that our action-ranking approach not only achieves better generalization to larger problems than those used in training but also outperforms multiple baselines (value function and action ranking) methods in terms of success rate and plan quality.
+
           </p>
         </div>
       </div>
