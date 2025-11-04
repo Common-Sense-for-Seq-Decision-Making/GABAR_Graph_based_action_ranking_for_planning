@@ -1,0 +1,87 @@
+/* --- Fonts & Basic Styles --- */
+body {
+  font-family: 'Noto Sans', sans-serif;
+}
+
+.title, .button, .navbar {
+  font-family: 'Google Sans', sans-serif;
+}
+
+/* Make the active navbar link bold */
+.navbar-item.is-active {
+  font-weight: bold;
+}
+
+/* --- Responsive Images & Figures --- */
+.visible-image {
+  margin: 20px auto;
+  display: block;
+  max-width: 100%;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 5px;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* --- Results Table Styles (from your original) --- */
+.results-table-container {
+  overflow-x: auto; /* This is key for mobile-friendly tables */
+  margin: 25px 0;
+}
+
+.results-table {
+  width: 100%;
+  min-width: 1000px; /* Ensures table is wide enough to scroll */
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+.results-table th, .results-table td {
+  border: 1px solid #dbdbdb;
+  padding: 8px 10px;
+  text-align: center;
+  vertical-align: middle;
+}
+.results-table th {
+  background-color: #f5f5f5;
+  font-weight: 600;
+}
+.results-table .domain-col {
+  text-align: left;
+  font-weight: 600;
+  min-width: 80px;
+}
+.results-table .diff-col {
+  font-weight: 600;
+}
+
+/* Color coding from LaTeX file */
+.c-high { background-color: #00A3A1; color: white; } /* 90-100% */
+.c-med { background-color: #64D1C6; } /* 75-89% */
+.c-low { background-color: #C8F1EA; } /* 50-74% */
+
+.p-high { background-color: #BBA0E5; } /* 1.00+ */
+.p-med { background-color: #DCC4F6; } /* 0.75-0.99 */
+.p-low { background-color: #F4EBFC; } /* 0.50-0.74 */
+
+.results-table .c-high strong { color: white !important; }
+
+.results-table th[colspan] {
+  background-color: #e0e0e0;
+}
+
+.table-caption {
+  font-size: 0.9rem;
+  font-style: italic;
+  color: #555;
+  margin-bottom: 10px;
+  text-align: left;
+}
+
+/* Table 2 Header Colors */
+.header-baselines { background-color: #ffcccc !important; } /* Light Red */
+.header-gabar { background-color: #ccffcc !important; } /* Light Green */
+.header-ablations { background-color: #cceeff !important; } /* Light Blue */

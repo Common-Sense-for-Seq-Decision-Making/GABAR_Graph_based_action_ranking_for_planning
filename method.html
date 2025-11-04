@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="description" content="GABAR: Graph Attention-Based Action Ranking for Relational Policy Learning">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GABAR - Method</title>
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro" rel="stylesheet">
+  <link rel="stylesheet" href="./static/css/bulma.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  <script src="https://kit.fontawesome.com/006a5775d5.js" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="./static/css/shared-style.css">
+  <link rel="icon" href="./resources/favicon.ico">
+</head>
+<body>
+
+<nav class="navbar is-light" role="navigation" aria-label="main navigation" style="box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+  <div class="container">
+    <div class="navbar-brand">
+      <a class="navbar-item has-text-weight-bold" href="index.html">
+        GABAR
+      </a>
+      <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="navbarMenu">
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+      </a>
+    </div>
+    <div id="navbarMenu" class="navbar-menu">
+      <div class="navbar-start">
+        <a class="navbar-item" href="index.html">Home</a>
+        <a class="navbar-item is-active" href="method.html">Method</a>
+        <a class="navbar-item" href="results.html">Results</a>
+      </div>
+      <div class="navbar-end">
+        <a class="navbar-item" href="./resources/GABAR_NeurIPS_Camera_ready.pdf">
+          <span class="icon"><i class="fas fa-file-pdf"></i></span>&nbsp;Paper
+        </a>
+        <a class="navbar-item" href="https://arxiv.org/pdf/2412.04752">
+          <span class="icon"><i class="ai ai-arxiv"></i></span>&nbsp;arXiv
+        </a>
+        <a class="navbar-item" href="https://anonymous.4open.science/r/ltp-4741/">
+          <span class="icon"><i class="fab fa-github"></i></span>&nbsp;Code
+        </a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<section class="section">
+  <div class="container">
+    <div class="columns is-centered">
+      <div class="column is-three-quarters content">
+
+        <h2 class="title is-2">Why Learning for Planning?</h2>
+        <p><b>Classical planners struggle with scale:</b> Traditional planners use search and heuristics. While they can find optimal solutions, they often struggle with scalability and become computationally expensive or too slow for large, complex problems.</p>
+        <p><b>PDDL structure enables sample-efficient learning:</b> Unlike standard Reinforcement Learning, which can require millions of examples, the relational structure of PDDL (Planning Domain Definition Language) allows Graph Neural Networks (GNNs) to learn generalizable policies from just thousands of examples.</p>
+        <p><b>Learn on small, apply to large:</b> The core idea is to train a model on small problem instances (e.g., 6-9 block problems) and then apply that learned policy to solve significantly larger instances (e.g., 40-block problems) where classical planners fail.</p>
+        <hr>
+
+        <h2 class="title is-2">The Problem with Existing Approaches</h2>
+        <p><b>Value functions require global consistency:</b> Learning distance-to-goal for all states is NP-hard and generalizes poorly. Many approaches try to learn a value function, V(s), that estimates the cost-to-goal from any state. This is extremely difficult because the function must be globally consistent, and since optimal planning is NP-hard, these value functions are hard to learn and often don't generalize well.</p>
+        <p><b>Fixed architectures limit reasoning:</b> Models like ASNets have a fixed receptive field, failing to capture long-range dependencies. This design limits their ability to reason about long-range dependencies between objects and actions, which is crucial in complex problems.</p>
+        <p><b>Missing action structure:</b> Previous GNNs model state but ignore how actions explicitly relate to objects. Previous GNN approaches (like GPL) focus on state representations but do not explicitly model how actions themselves relate to objects. This misses critical information.</p>
+        <hr>
+
+        <h2 class="title is-2">GABAR's Key Insight</h2>
+        <p><b>Rank actions, not states:</b> Learning a local, relative ranking of *applicable actions* is easier and more generalizable. Instead of learning a complex, globally consistent value function V(s) for all states, GABAR learns a simpler, locally consistent function to just rank the applicable actions in the *current* state.</p>
+        <p><b>Explicit action representation:</b> The graph includes action nodes connected to their argument objects, encoding applicability. Our novel graph representation includes 'action nodes' that are explicitly connected to the 'object nodes' they take as arguments.</p>
+        <p><b>Sequential parameter selection:</b> A GRU decoder builds actions step-by-step, capturing complex parameter dependencies. It first selects an action schema (e.g., 'stack') and then sequentially selects each parameter (e.g., 'blockA', then 'blockB'), conditioning each choice on the previous ones.</p>
+        <img src="./resources/gabar_graph_example.png" alt="GABAR Graph Construction Example" class="visible-image" style="width: 100%; background-color: white;">
+        <hr>
+        
+        <h2 class="title is-2">Method Overview</h2>
+        <p><b>Graph representation with 4 node types:</b> Objects, Predicates, Actions, and a Global node. Edges represent predicate-object and action-object relationships, encoding the state, goal, and all potential actions.</p>
+        <p><b>GNN encoder with attention:</b> L rounds of message passing (we use 9) update node embeddings, while a global node allows rapid information flow and aggregates graph-level information.</p>
+        <p><b>GRU decoder for action construction:</b> Sequentially selects an action schema, then its parameters, using beam search. The final global embedding is fed into a GRU decoder. We use a beam search (width k=2) to explore multiple high-scoring actions in parallel.</p>
+        <img src="./resources/gabar_framework.png" alt="GABAR Framework" class="visible-image" style="width: 80%;">
+        <hr>
+
+        <h2 class="title is-2">Technical Details</h2>
+        <p><b>Training setup:</b> Trained on 3-6k examples from small problems, labeled by an optimal planner. We generate data by solving small problems (e.g., 6-9 blocks, 5-15 balls) with an optimal planner. The first action of the optimal plan is used as the training label.</p>
+        <p><b>Architecture specifics:</b> Hidden dim 64, 9 GNN rounds, Adam optimizer, and a beam search width of 2. We use a hidden dimensionality of 64, 9 rounds of GNN message passing, and a batch size of 16.</p>
+        <p><b>Datasets:</b> 3,000-6,000 training examples per domain, generated with standard PDDL generators.</p>
+        
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const $navbarBurgers = Array.prototype.slice.call(document.querySelectorAll('.navbar-burger'), 0);
+  if ($navbarBurgers.length > 0) {
+    $navbarBurgers.forEach( el => {
+      el.addEventListener('click', () => {
+        const target = el.dataset.target;
+        const $target = document.getElementById(target);
+        el.classList.toggle('is-active');
+        $target.classList.toggle('is-active');
+      });
+    });
+  }
+});
+</script>
+
+</body>
+</html>
