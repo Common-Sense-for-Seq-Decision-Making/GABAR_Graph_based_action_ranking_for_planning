@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GABAR: Interactive Graph Construction</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #fafafa;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1100px;
+            width: 100%;
+        }
+        h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 1.4em;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            font-size: 0.95em;
+            margin-bottom: 20px;
+        }
+        .main-layout {
+            display: flex;
+            gap: 30px;
+            align-items: flex-start;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .state-panel {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            min-width: 260px;
+        }
+        .state-panel h3 {
+            font-size: 0.9em;
+            color: #555;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .graph-panel {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            flex: 1;
+            min-width: 500px;
+        }
+        .graph-panel h3 {
+            font-size: 0.9em;
+            color: #555;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        /* SVG elements */
+        .block {
+            cursor: pointer;
+            transition: transform 0.2s, filter 0.2s;
+        }
+        .block:hover {
+            transform: scale(1.05);
+        }
+        .block rect {
+            transition: stroke-width 0.2s, stroke 0.2s;
+        }
+        .node {
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .node circle, .node rect {
+            transition: stroke-width 0.2s, stroke 0.2s, opacity 0.2s, filter 0.2s;
+        }
+        .edge {
+            transition: stroke-width 0.3s, stroke 0.3s, opacity 0.3s;
+        }
+        /* Highlight states */
+        .dimmed { opacity: 0.2; }
+        .highlighted circle,
+        .highlighted rect {
+            stroke-width: 3px;
+            filter: drop-shadow(0 0 6px rgba(0,0,0,0.3));
+        }
+        .edge.highlighted {
+            stroke-width: 3.5px !important;
+        }
+        .block.highlighted rect {
+            stroke-width: 3px;
+            stroke: #e63946;
+            filter: drop-shadow(0 0 8px rgba(230, 57, 70, 0.4));
+        }
+        /* Tooltip */
+        .tooltip {
+            position: fixed;
+            background: #333;
+            color: white;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 0.85em;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+            z-index: 1000;
+            max-width: 280px;
+            line-height: 1.4;
+        }
+        .tooltip.visible { opacity: 1; }
+        /* Legend */
+        .legend {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.82em;
+            color: #555;
+        }
+        .legend-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+        }
+        .legend-line {
+            width: 20px;
+            height: 3px;
+            border-radius: 2px;
+        }
+        .arrow-label {
+            font-size: 1.8em;
+            color: #999;
+            display: flex;
+            align-items: center;
+            align-self: center;
+        }
+        .instructions {
+            text-align: center;
+            color: #888;
+            font-size: 0.85em;
+            margin-top: 12px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>How GABAR Converts a Planning State to a Graph</h2>
+        <p class="subtitle">Hover over any element to see how blocks, predicates, and actions map to graph nodes and edges</p>
+
+        <div class="main-layout">
+            <!-- Left: Block States -->
+            <div class="state-panel">
+                <h3>Planning States</h3>
+                <svg id="states-svg" width="240" height="320" viewBox="0 0 240 320">
+                    <!-- Start State Label -->
+                    <text x="120" y="20" text-anchor="middle" font-size="13" fill="#555" font-weight="600">Start State</text>
+
+                    <!-- Table -->
+                    <rect x="20" y="150" width="200" height="8" rx="2" fill="#4a90d9" opacity="0.6"/>
+
+                    <!-- O2 block on table -->
+                    <g class="block" data-object="O2" data-tooltip="Object O2: on the table. Clear in goal state.">
+                        <rect x="50" y="105" width="55" height="42" rx="8" fill="#fff3b0" stroke="#d4a800" stroke-width="2"/>
+                        <text x="77" y="131" text-anchor="middle" font-size="14" font-weight="600" fill="#6b5900">O2</text>
+                    </g>
+
+                    <!-- O3 on top of O2 -->
+                    <g class="block" data-object="O3" data-tooltip="Object O3: on O2 in start state, should be on O1 in goal. Clear in both states.">
+                        <rect x="50" y="60" width="55" height="42" rx="8" fill="#fff3b0" stroke="#d4a800" stroke-width="2"/>
+                        <text x="77" y="86" text-anchor="middle" font-size="14" font-weight="600" fill="#6b5900">O3</text>
+                    </g>
+
+                    <!-- O1 block on table -->
+                    <g class="block" data-object="O1" data-tooltip="Object O1: on the table, clear. Target base for O3 in goal.">
+                        <rect x="135" y="105" width="55" height="42" rx="8" fill="#fff3b0" stroke="#d4a800" stroke-width="2"/>
+                        <text x="162" y="131" text-anchor="middle" font-size="14" font-weight="600" fill="#6b5900">O1</text>
+                    </g>
+
+                    <!-- Goal State Label -->
+                    <text x="120" y="200" text-anchor="middle" font-size="13" fill="#555" font-weight="600">Goal State</text>
+
+                    <!-- Goal Table -->
+                    <rect x="20" y="320" width="200" height="8" rx="2" fill="#4a90d9" opacity="0.6"/>
+
+                    <!-- Goal: O1 on table -->
+                    <g class="block" data-object="O1" data-tooltip="Object O1: base block in goal state. O3 goes on top of O1.">
+                        <rect x="50" y="275" width="55" height="42" rx="8" fill="#fff3b0" stroke="#9e8200" stroke-width="2" stroke-dasharray="4,2"/>
+                        <text x="77" y="301" text-anchor="middle" font-size="14" font-weight="600" fill="#6b5900">O1</text>
+                    </g>
+
+                    <!-- Goal: O3 on O1 -->
+                    <g class="block" data-object="O3" data-tooltip="Object O3: must be placed on O1 in goal state.">
+                        <rect x="50" y="230" width="55" height="42" rx="8" fill="#fff3b0" stroke="#9e8200" stroke-width="2" stroke-dasharray="4,2"/>
+                        <text x="77" y="256" text-anchor="middle" font-size="14" font-weight="600" fill="#6b5900">O3</text>
+                    </g>
+
+                    <!-- Goal: O2 on table -->
+                    <g class="block" data-object="O2" data-tooltip="Object O2: on table in goal state, clear.">
+                        <rect x="135" y="275" width="55" height="42" rx="8" fill="#fff3b0" stroke="#9e8200" stroke-width="2" stroke-dasharray="4,2"/>
+                        <text x="162" y="301" text-anchor="middle" font-size="14" font-weight="600" fill="#6b5900">O2</text>
+                    </g>
+
+                    <!-- Goal label note -->
+                    <text x="120" y="345" text-anchor="middle" font-size="10" fill="#999">(dashed = goal configuration)</text>
+                </svg>
+            </div>
+
+            <div class="arrow-label">→</div>
+
+            <!-- Right: Graph Representation -->
+            <div class="graph-panel">
+                <h3>Graph Representation</h3>
+                <svg id="graph-svg" width="520" height="320" viewBox="0 0 520 320">
+
+                    <!-- EDGES: Action-Object (blue) -->
+                    <!-- Pick-up -> O1 -->
+                    <line class="edge action-edge" data-group="pickup,O1" x1="130" y1="60" x2="130" y2="140" stroke="#4a90d9" stroke-width="2.5" opacity="0.7"/>
+                    <!-- Unstack -> O3 -->
+                    <line class="edge action-edge" data-group="unstack,O3" x1="360" y1="60" x2="390" y2="140" stroke="#4a90d9" stroke-width="2.5" opacity="0.7"/>
+                    <!-- Unstack -> O2 -->
+                    <line class="edge action-edge" data-group="unstack,O2" x1="360" y1="60" x2="260" y2="140" stroke="#4a90d9" stroke-width="2.5" opacity="0.7"/>
+
+                    <!-- EDGES: Predicate-Object (red) -->
+                    <!-- Clear(O1) -> O1 -->
+                    <line class="edge pred-edge" data-group="clear_O1,O1" x1="70" y1="260" x2="130" y2="175" stroke="#e63946" stroke-width="2" opacity="0.6"/>
+                    <!-- Clear(O3) -> O3 -->
+                    <line class="edge pred-edge" data-group="clear_O3,O3" x1="460" y1="260" x2="390" y2="175" stroke="#e63946" stroke-width="2" opacity="0.6"/>
+                    <!-- On(O3,O2) -> O3 -->
+                    <line class="edge pred-edge" data-group="on_O3O2,O3" x1="340" y1="260" x2="390" y2="175" stroke="#e63946" stroke-width="2" opacity="0.6"/>
+                    <!-- On(O3,O2) -> O2 -->
+                    <line class="edge pred-edge" data-group="on_O3O2,O2" x1="340" y1="260" x2="260" y2="175" stroke="#e63946" stroke-width="2" opacity="0.6"/>
+                    <!-- G-ON(O3,O1) -> O3 -->
+                    <line class="edge pred-edge" data-group="g_on_O3O1,O3" x1="195" y1="260" x2="390" y2="175" stroke="#e63946" stroke-width="2" opacity="0.6" stroke-dasharray="5,3"/>
+                    <!-- G-ON(O3,O1) -> O1 -->
+                    <line class="edge pred-edge" data-group="g_on_O3O1,O1" x1="195" y1="260" x2="130" y2="175" stroke="#e63946" stroke-width="2" opacity="0.6" stroke-dasharray="5,3"/>
+
+                    <!-- ACTION NODES (blue circles) -->
+                    <g class="node action-node" data-action="pickup" data-group="pickup" data-tooltip="Pick-up action schema: picks up a clear block from the table. Connected to O1 (the block to pick up).">
+                        <circle cx="130" cy="45" r="28" fill="#4a90d9" stroke="#2d6eb5" stroke-width="2"/>
+                        <text x="130" y="42" text-anchor="middle" font-size="11" fill="white" font-weight="600">Pick-</text>
+                        <text x="130" y="55" text-anchor="middle" font-size="11" fill="white" font-weight="600">up</text>
+                    </g>
+
+                    <g class="node action-node" data-action="unstack" data-group="unstack" data-tooltip="Unstack action schema: removes a block from on top of another. Connected to O3 (block to move) and O2 (block beneath).">
+                        <circle cx="360" cy="45" r="28" fill="#4a90d9" stroke="#2d6eb5" stroke-width="2"/>
+                        <text x="360" y="50" text-anchor="middle" font-size="11" fill="white" font-weight="600">Unstack</text>
+                    </g>
+
+                    <!-- OBJECT NODES (yellow circles) -->
+                    <g class="node object-node" data-object="O1" data-group="O1" data-tooltip="Object node O1: connected to Pick-up (as parameter), Clear predicate (current state), and G-ON goal predicate.">
+                        <circle cx="130" cy="155" r="24" fill="#fff3b0" stroke="#d4a800" stroke-width="2"/>
+                        <text x="130" y="160" text-anchor="middle" font-size="13" font-weight="700" fill="#6b5900">O1</text>
+                    </g>
+
+                    <g class="node object-node" data-object="O2" data-group="O2" data-tooltip="Object node O2: connected to Unstack (as 2nd parameter) and On(O3,O2) predicate.">
+                        <circle cx="260" cy="155" r="24" fill="#fff3b0" stroke="#d4a800" stroke-width="2"/>
+                        <text x="260" y="160" text-anchor="middle" font-size="13" font-weight="700" fill="#6b5900">O2</text>
+                    </g>
+
+                    <g class="node object-node" data-object="O3" data-group="O3" data-tooltip="Object node O3: connected to Unstack (as 1st parameter), On(O3,O2), G-ON(O3,O1), and Clear predicates.">
+                        <circle cx="390" cy="155" r="24" fill="#fff3b0" stroke="#d4a800" stroke-width="2"/>
+                        <text x="390" y="160" text-anchor="middle" font-size="13" font-weight="700" fill="#6b5900">O3</text>
+                    </g>
+
+                    <!-- PREDICATE NODES (red rounded rects) -->
+                    <g class="node pred-node" data-predicate="clear_O1" data-group="clear_O1" data-tooltip="Predicate: Clear(O1) — O1 has nothing on top of it in the current state.">
+                        <rect x="20" y="248" width="100" height="32" rx="6" fill="#e63946" stroke="#c1272d" stroke-width="1.5"/>
+                        <text x="70" y="269" text-anchor="middle" font-size="11" fill="white" font-weight="600">Clear(O1)</text>
+                    </g>
+
+                    <g class="node pred-node" data-predicate="g_on_O3O1" data-group="g_on_O3O1" data-tooltip="Goal Predicate: G-ON(O3,O1) — In the goal, O3 should be on O1. Dashed edges indicate goal predicates.">
+                        <rect x="135" y="248" width="120" height="32" rx="6" fill="#e63946" stroke="#c1272d" stroke-width="1.5" opacity="0.8"/>
+                        <text x="195" y="269" text-anchor="middle" font-size="10.5" fill="white" font-weight="600">G-ON(O3,O1)</text>
+                    </g>
+
+                    <g class="node pred-node" data-predicate="on_O3O2" data-group="on_O3O2" data-tooltip="Predicate: On(O3,O2) — O3 is currently on top of O2 in the start state.">
+                        <rect x="275" y="248" width="120" height="32" rx="6" fill="#e63946" stroke="#c1272d" stroke-width="1.5"/>
+                        <text x="335" y="269" text-anchor="middle" font-size="11" fill="white" font-weight="600">On(O3,O2)</text>
+                    </g>
+
+                    <g class="node pred-node" data-predicate="clear_O3" data-group="clear_O3" data-tooltip="Predicate: Clear(O3) — O3 has nothing on top of it in the current state.">
+                        <rect x="410" y="248" width="100" height="32" rx="6" fill="#e63946" stroke="#c1272d" stroke-width="1.5"/>
+                        <text x="460" y="269" text-anchor="middle" font-size="11" fill="white" font-weight="600">Clear(O3)</text>
+                    </g>
+
+                    <!-- Edge type labels -->
+                    <text x="85" y="110" font-size="9" fill="#4a90d9" font-style="italic" opacity="0.8">action-object</text>
+                    <text x="85" y="225" font-size="9" fill="#e63946" font-style="italic" opacity="0.8">pred-object</text>
+
+                </svg>
+
+                <!-- Legend -->
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background: #4a90d9;"></div>
+                        <span>Action node</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background: #fff3b0; border: 2px solid #d4a800;"></div>
+                        <span>Object node</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background: #e63946; border-radius: 3px;"></div>
+                        <span>Predicate node</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-line" style="background: #4a90d9;"></div>
+                        <span>Action-object edge</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-line" style="background: #e63946;"></div>
+                        <span>Pred-object edge</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-line" style="background: #e63946; border-top: 2px dashed #e63946; height:0;"></div>
+                        <span>Goal predicate edge</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <p class="instructions">Hover over any block, action, or predicate to see how it connects in the graph. The graph explicitly represents actions as nodes — this is GABAR's key innovation.</p>
+    </div>
+
+    <!-- Tooltip -->
+    <div class="tooltip" id="tooltip"></div>
+
+    <script>
+        const tooltip = document.getElementById('tooltip');
+
+        // Define the mapping: which graph elements correspond to which objects/actions/predicates
+        const objectToGraphElements = {
+            'O1': {
+                nodes: ['O1'],
+                actions: ['pickup'],
+                predicates: ['clear_O1', 'g_on_O3O1'],
+                edges: ['pickup,O1', 'clear_O1,O1', 'g_on_O3O1,O1']
+            },
+            'O2': {
+                nodes: ['O2'],
+                actions: ['unstack'],
+                predicates: ['on_O3O2'],
+                edges: ['unstack,O2', 'on_O3O2,O2']
+            },
+            'O3': {
+                nodes: ['O3'],
+                actions: ['unstack'],
+                predicates: ['clear_O3', 'on_O3O2', 'g_on_O3O1'],
+                edges: ['unstack,O3', 'clear_O3,O3', 'on_O3O2,O3', 'g_on_O3O1,O3']
+            }
+        };
+
+        const actionToGraphElements = {
+            'pickup': {
+                nodes: ['O1'],
+                actions: ['pickup'],
+                predicates: [],
+                edges: ['pickup,O1']
+            },
+            'unstack': {
+                nodes: ['O2', 'O3'],
+                actions: ['unstack'],
+                predicates: [],
+                edges: ['unstack,O2', 'unstack,O3']
+            }
+        };
+
+        const predicateToGraphElements = {
+            'clear_O1': {
+                nodes: ['O1'],
+                actions: [],
+                predicates: ['clear_O1'],
+                edges: ['clear_O1,O1']
+            },
+            'clear_O3': {
+                nodes: ['O3'],
+                actions: [],
+                predicates: ['clear_O3'],
+                edges: ['clear_O3,O3']
+            },
+            'on_O3O2': {
+                nodes: ['O2', 'O3'],
+                actions: [],
+                predicates: ['on_O3O2'],
+                edges: ['on_O3O2,O2', 'on_O3O2,O3']
+            },
+            'g_on_O3O1': {
+                nodes: ['O1', 'O3'],
+                actions: [],
+                predicates: ['g_on_O3O1'],
+                edges: ['g_on_O3O1,O1', 'g_on_O3O1,O3']
+            }
+        };
+
+        function showTooltip(e, text) {
+            tooltip.textContent = text;
+            tooltip.classList.add('visible');
+            updateTooltipPosition(e);
+        }
+
+        function updateTooltipPosition(e) {
+            tooltip.style.left = (e.clientX + 15) + 'px';
+            tooltip.style.top = (e.clientY - 10) + 'px';
+        }
+
+        function hideTooltip() {
+            tooltip.classList.remove('visible');
+        }
+
+        function highlightElements(mapping) {
+            // Dim everything first
+            document.querySelectorAll('.node').forEach(n => n.classList.add('dimmed'));
+            document.querySelectorAll('.edge').forEach(e => e.classList.add('dimmed'));
+            document.querySelectorAll('.block').forEach(b => b.classList.add('dimmed'));
+
+            // Highlight relevant nodes
+            if (mapping.nodes) {
+                mapping.nodes.forEach(id => {
+                    document.querySelectorAll(`[data-object="${id}"]`).forEach(el => {
+                        el.classList.remove('dimmed');
+                        el.classList.add('highlighted');
+                    });
+                });
+            }
+            if (mapping.actions) {
+                mapping.actions.forEach(id => {
+                    document.querySelectorAll(`[data-action="${id}"]`).forEach(el => {
+                        el.classList.remove('dimmed');
+                        el.classList.add('highlighted');
+                    });
+                });
+            }
+            if (mapping.predicates) {
+                mapping.predicates.forEach(id => {
+                    document.querySelectorAll(`[data-predicate="${id}"]`).forEach(el => {
+                        el.classList.remove('dimmed');
+                        el.classList.add('highlighted');
+                    });
+                });
+            }
+            // Highlight relevant edges
+            if (mapping.edges) {
+                mapping.edges.forEach(group => {
+                    document.querySelectorAll(`.edge[data-group="${group}"]`).forEach(el => {
+                        el.classList.remove('dimmed');
+                        el.classList.add('highlighted');
+                    });
+                });
+            }
+        }
+
+        function clearHighlights() {
+            document.querySelectorAll('.dimmed').forEach(el => el.classList.remove('dimmed'));
+            document.querySelectorAll('.highlighted').forEach(el => el.classList.remove('highlighted'));
+        }
+
+        // Attach events to blocks in state panel
+        document.querySelectorAll('.block').forEach(block => {
+            const obj = block.dataset.object;
+            block.addEventListener('mouseenter', (e) => {
+                const mapping = objectToGraphElements[obj];
+                if (mapping) highlightElements(mapping);
+                showTooltip(e, block.dataset.tooltip);
+            });
+            block.addEventListener('mousemove', updateTooltipPosition);
+            block.addEventListener('mouseleave', () => {
+                clearHighlights();
+                hideTooltip();
+            });
+        });
+
+        // Attach events to action nodes
+        document.querySelectorAll('.action-node').forEach(node => {
+            const action = node.dataset.action;
+            node.addEventListener('mouseenter', (e) => {
+                const mapping = actionToGraphElements[action];
+                if (mapping) highlightElements(mapping);
+                showTooltip(e, node.dataset.tooltip);
+            });
+            node.addEventListener('mousemove', updateTooltipPosition);
+            node.addEventListener('mouseleave', () => {
+                clearHighlights();
+                hideTooltip();
+            });
+        });
+
+        // Attach events to object nodes in graph
+        document.querySelectorAll('.object-node').forEach(node => {
+            const obj = node.dataset.object;
+            node.addEventListener('mouseenter', (e) => {
+                const mapping = objectToGraphElements[obj];
+                if (mapping) highlightElements(mapping);
+                showTooltip(e, node.dataset.tooltip);
+            });
+            node.addEventListener('mousemove', updateTooltipPosition);
+            node.addEventListener('mouseleave', () => {
+                clearHighlights();
+                hideTooltip();
+            });
+        });
+
+        // Attach events to predicate nodes
+        document.querySelectorAll('.pred-node').forEach(node => {
+            const pred = node.dataset.predicate;
+            node.addEventListener('mouseenter', (e) => {
+                const mapping = predicateToGraphElements[pred];
+                if (mapping) highlightElements(mapping);
+                showTooltip(e, node.dataset.tooltip);
+            });
+            node.addEventListener('mousemove', updateTooltipPosition);
+            node.addEventListener('mouseleave', () => {
+                clearHighlights();
+                hideTooltip();
+            });
+        });
+    </script>
+</body>
+</html>

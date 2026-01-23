@@ -125,6 +125,18 @@
 
 <p>This gives the GNN direct access to structured action information during message passing. The network doesn't have to <em>infer</em> action applicability from predicate patterns—it's explicitly represented.</p>
 
+<!-- IMAGE: Graph Construction Figure -->
+<div style="margin: 2em 0; padding: 1.5em; background: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef;">
+<p style="color: #e63946; font-weight: bold; font-size: 0.85em; margin-bottom: 0.5em;">[INSERT IMAGE: graph_construction_horizontal_v5.png from paper]</p>
+<p style="font-size: 0.9em; color: #555;"><em>Graph construction for a 3-block problem. Left: start and goal states. Right: the resulting graph. Blue action nodes (Pick-up, Unstack) connect to the objects they act on. Red predicate nodes (Clear, On) encode the current state and goal. The graph makes action-object relationships explicit.</em></p>
+</div>
+
+<!-- INTERACTIVE WIDGET EMBED NOTE -->
+<div style="margin: 2em 0; padding: 1.5em; background: #f0f7ff; border-radius: 8px; border: 1px solid #cce0ff;">
+<p style="color: #2d6eb5; font-weight: bold; font-size: 0.85em; margin-bottom: 0.5em;">[EMBED INTERACTIVE WIDGET HERE]</p>
+<p style="font-size: 0.9em; color: #555;">In Substack: click the <strong>+</strong> button → choose <strong>Embed</strong> → paste the URL where you host <code>interactive_graph.html</code> (e.g., on your project website or GitHub Pages). Readers can hover over blocks, actions, or predicates to see how each element maps between the planning state and the graph representation.</p>
+</div>
+
 <h3>2. GNN Encoder with Global Context</h3>
 
 <p>Our GNN processes the graph through 9 rounds of message passing. Each round updates edges, then nodes, then a global summary vector.</p>
@@ -155,6 +167,12 @@
 </ol>
 
 <p>Each selection is conditioned on all previous selections through the GRU's hidden state. We use beam search (width 2) to maintain multiple candidates in parallel, avoiding overly greedy local decisions.</p>
+
+<!-- IMAGE: Architecture Overview -->
+<div style="margin: 2em 0; padding: 1.5em; background: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef;">
+<p style="color: #e63946; font-weight: bold; font-size: 0.85em; margin-bottom: 0.5em;">[INSERT IMAGE: LTP_main_v11.png — GABAR Architecture]</p>
+<p style="font-size: 0.9em; color: #555;"><em>GABAR's full pipeline. (a) A PDDL problem is converted to an action-centric graph. (b) The GNN encoder runs L rounds of message passing, updating edges, nodes, and the global representation. (c) The GRU decoder sequentially selects an action schema, then fills each parameter position conditioned on prior choices.</em></p>
+</div>
 
 <hr>
 
@@ -278,6 +296,12 @@
 <p><strong>GRAPL (action ranking, no action nodes):</strong> Easy 43.5% | Medium 29.3% | Hard 22.1%</p>
 <p><strong>OpenAI O3:</strong> Easy 33.4% | Medium 11.6% | Hard 0.4%</p>
 <p><strong>Gemini 2.5 Pro:</strong> Easy 44.0% | Medium 17.1% | Hard 1.5%</p>
+
+<!-- IMAGE: Results Bar Chart -->
+<div style="margin: 2em 0; padding: 1.5em; background: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef;">
+<p style="color: #e63946; font-weight: bold; font-size: 0.85em; margin-bottom: 0.5em;">[INSERT IMAGE: results_comparison.png — or use the chart below]</p>
+<p style="font-size: 0.9em; color: #555;"><em>Coverage comparison across Easy/Medium/Hard difficulties. GABAR (teal) maintains near-90% coverage as problems scale, while baselines and LLMs collapse. You can use the bar chart from your poster, screenshot the table from the paper, or upload the generated chart (see results_chart.html).</em></p>
+</div>
 
 <p>The coverage drop from easy to hard for GABAR is minimal: 95.5% → 89.2%. Compare this to GPL (79% → 6.5%) or state-of-the-art LLMs (33-44% → 0.4-1.5%).</p>
 
