@@ -127,15 +127,11 @@
 
 <!-- IMAGE: Graph Construction Figure -->
 <div style="margin: 2em 0; padding: 1.5em; background: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef;">
-<p style="color: #e63946; font-weight: bold; font-size: 0.85em; margin-bottom: 0.5em;">[INSERT IMAGE: graph_construction_horizontal_v5.png from paper]</p>
-<p style="font-size: 0.9em; color: #555;"><em>Graph construction for a 3-block problem. Left: start and goal states. Right: the resulting graph. Blue action nodes (Pick-up, Unstack) connect to the objects they act on. Red predicate nodes (Clear, On) encode the current state and goal. The graph makes action-object relationships explicit.</em></p>
+<p style="color: #e63946; font-weight: bold; font-size: 0.85em; margin-bottom: 0.5em;">[INSERT IMAGE: screenshot graph_annotated_static.html — open in browser and screenshot]</p>
+<p style="font-size: 0.9em; color: #555;"><em>How GABAR converts a planning state to a graph. Each block becomes an object node (color-coded). Current-state and goal predicates become red nodes. Applicable actions (Pick-up, Unstack) become blue nodes connected to their parameter objects. The graph makes all action-object-predicate relationships explicit.</em></p>
 </div>
 
-<!-- INTERACTIVE WIDGET EMBED NOTE -->
-<div style="margin: 2em 0; padding: 1.5em; background: #f0f7ff; border-radius: 8px; border: 1px solid #cce0ff;">
-<p style="color: #2d6eb5; font-weight: bold; font-size: 0.85em; margin-bottom: 0.5em;">[EMBED INTERACTIVE WIDGET HERE]</p>
-<p style="font-size: 0.9em; color: #555;">In Substack: click the <strong>+</strong> button → choose <strong>Embed</strong> → paste the URL where you host <code>interactive_graph.html</code> (e.g., on your project website or GitHub Pages). Readers can hover over blocks, actions, or predicates to see how each element maps between the planning state and the graph representation.</p>
-</div>
+<p><strong>Try the interactive version:</strong> <a href="YOUR_PROJECT_SITE_URL/interactive_graph.html">hover over any element to see its connections →</a></p>
 
 <h3>2. GNN Encoder with Global Context</h3>
 
