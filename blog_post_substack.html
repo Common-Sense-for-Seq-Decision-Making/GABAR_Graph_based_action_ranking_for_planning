@@ -63,6 +63,110 @@
             border-radius: 3px;
             font-size: 0.9em;
         }
+
+        /* Results Charts Styles */
+        .results-chart-container {
+            margin: 25px 0;
+            padding: 20px;
+            background: #fafafa;
+            border-radius: 10px;
+        }
+        .chart {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .chart-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .chart-label {
+            width: 130px;
+            font-size: 0.8em;
+            font-weight: 600;
+            color: #444;
+            text-align: right;
+            flex-shrink: 0;
+        }
+        .chart-bar-container {
+            flex: 1;
+            height: 24px;
+            background: #eee;
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
+        }
+        .chart-bar {
+            height: 100%;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 8px;
+            font-size: 0.7em;
+            font-weight: 700;
+            color: white;
+        }
+        .chart-bar.small-text {
+            justify-content: flex-start;
+            padding-left: 8px;
+            color: #333;
+        }
+        .difficulty-section {
+            margin-bottom: 15px;
+        }
+        .difficulty-header {
+            font-weight: 700;
+            font-size: 0.85em;
+            color: #555;
+            margin: 12px 0 6px 0;
+            padding: 3px 8px;
+            background: #f0f0f0;
+            border-radius: 4px;
+            display: inline-block;
+        }
+        .chart-title {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        .chart-title h4 {
+            font-size: 1em;
+            color: #333;
+            margin: 0;
+            font-style: normal;
+        }
+        .chart-title p {
+            font-size: 0.75em;
+            color: #888;
+            margin: 3px 0 0;
+        }
+        .chart-caption {
+            font-size: 0.75em;
+            color: #777;
+            margin-top: 12px;
+            text-align: center;
+            font-style: italic;
+        }
+        .chart-divider {
+            border-top: 1px solid #ddd;
+            margin: 6px 0 6px 140px;
+        }
+        .image-container {
+            margin: 2em 0;
+            text-align: center;
+        }
+        .image-container img {
+            max-width: 100%;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+        .image-caption {
+            font-size: 0.85em;
+            color: #666;
+            margin-top: 8px;
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
@@ -125,13 +229,11 @@
 
 <p>This gives the GNN direct access to structured action information during message passing. The network doesn't have to <em>infer</em> action applicability from predicate patterns—it's explicitly represented.</p>
 
-<!-- IMAGE: Graph Construction Figure -->
-<div style="margin: 2em 0; padding: 1.5em; background: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef;">
-<p style="color: #e63946; font-weight: bold; font-size: 0.85em; margin-bottom: 0.5em;">[INSERT IMAGE: screenshot graph_annotated_static.html — open in browser and screenshot]</p>
-<p style="font-size: 0.9em; color: #555;"><em>How GABAR converts a planning state to a graph. Each block becomes an object node (color-coded). Current-state and goal predicates become red nodes. Applicable actions (Pick-up, Unstack) become blue nodes connected to their parameter objects. The graph makes all action-object-predicate relationships explicit.</em></p>
+<!-- Interactive Graph Visualization -->
+<div class="image-container">
+    <img src="./resources/gabar_framework.png" alt="GABAR Framework showing graph construction">
+    <p class="image-caption">How GABAR converts a planning state to a graph. Object nodes (yellow), predicate nodes (red for current state, green for goals), and action nodes (blue) form a connected graph structure.</p>
 </div>
-
-<p><strong>Try the interactive version:</strong> <a href="YOUR_PROJECT_SITE_URL/interactive_graph.html">hover over any element to see its connections →</a></p>
 
 <h3>2. GNN Encoder with Global Context</h3>
 
@@ -164,10 +266,10 @@
 
 <p>Each selection is conditioned on all previous selections through the GRU's hidden state. We use beam search (width 2) to maintain multiple candidates in parallel, avoiding overly greedy local decisions.</p>
 
-<!-- IMAGE: Architecture Overview -->
-<div style="margin: 2em 0; padding: 1.5em; background: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef;">
-<p style="color: #e63946; font-weight: bold; font-size: 0.85em; margin-bottom: 0.5em;">[INSERT IMAGE: LTP_main_v11.png — GABAR Architecture]</p>
-<p style="font-size: 0.9em; color: #555;"><em>GABAR's full pipeline. (a) A PDDL problem is converted to an action-centric graph. (b) The GNN encoder runs L rounds of message passing, updating edges, nodes, and the global representation. (c) The GRU decoder sequentially selects an action schema, then fills each parameter position conditioned on prior choices.</em></p>
+<!-- Architecture Overview -->
+<div class="image-container">
+    <img src="./resources/training_process.png" alt="GABAR Training Pipeline">
+    <p class="image-caption">GABAR's full pipeline: (a) PDDL problem converted to action-centric graph, (b) GNN encoder runs L rounds of message passing, (c) GRU decoder sequentially selects action schema and parameters.</p>
 </div>
 
 <hr>
@@ -264,6 +366,39 @@
 
 <h3>The Ablation Hierarchy</h3>
 
+<!-- Ablation Study Chart -->
+<div class="results-chart-container">
+    <div class="chart-title">
+        <h4>Ablation Study: Coverage on Hard Problems</h4>
+        <p>Each bar shows coverage when one component is removed</p>
+    </div>
+
+    <div class="chart">
+        <div class="chart-row">
+            <div class="chart-label">Full GABAR</div>
+            <div class="chart-bar-container"><div class="chart-bar" style="width: 89.2%; background: #00A3A1;">89.2%</div></div>
+        </div>
+        <div class="chart-divider" style="margin-left:0"></div>
+        <div class="chart-row">
+            <div class="chart-label" style="color:#c0392b;">- Cond. Decoder</div>
+            <div class="chart-bar-container"><div class="chart-bar" style="width: 60%; background: #e67e22;">60.0%</div></div>
+        </div>
+        <div class="chart-row">
+            <div class="chart-label" style="color:#c0392b;">- Global Node</div>
+            <div class="chart-bar-container"><div class="chart-bar" style="width: 42.5%; background: #e74c3c;">42.5%</div></div>
+        </div>
+        <div class="chart-row">
+            <div class="chart-label" style="color:#c0392b;">- Ranking Obj.</div>
+            <div class="chart-bar-container"><div class="chart-bar small-text" style="width: 12.1%; background: #c0392b;">12.1%</div></div>
+        </div>
+        <div class="chart-row">
+            <div class="chart-label" style="color:#c0392b;">- Action Nodes</div>
+            <div class="chart-bar-container"><div class="chart-bar small-text" style="width: 7.4%; background: #922b21;">7.4%</div></div>
+        </div>
+    </div>
+    <p class="chart-caption">Removing action nodes or the ranking objective causes near-total failure.</p>
+</div>
+
 <p>Summarizing the coverage on hard problems:</p>
 
 <ol>
@@ -293,10 +428,91 @@
 <p><strong>OpenAI O3:</strong> Easy 33.4% | Medium 11.6% | Hard 0.4%</p>
 <p><strong>Gemini 2.5 Pro:</strong> Easy 44.0% | Medium 17.1% | Hard 1.5%</p>
 
-<!-- IMAGE: Results Bar Chart -->
-<div style="margin: 2em 0; padding: 1.5em; background: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef;">
-<p style="color: #e63946; font-weight: bold; font-size: 0.85em; margin-bottom: 0.5em;">[INSERT IMAGE: results_comparison.png — or use the chart below]</p>
-<p style="font-size: 0.9em; color: #555;"><em>Coverage comparison across Easy/Medium/Hard difficulties. GABAR (teal) maintains near-90% coverage as problems scale, while baselines and LLMs collapse. You can use the bar chart from your poster, screenshot the table from the paper, or upload the generated chart (see results_chart.html).</em></p>
+<!-- Results Coverage Comparison Chart -->
+<div class="results-chart-container">
+    <div class="chart-title">
+        <h4>Coverage (% Problems Solved) by Difficulty</h4>
+        <p>Averaged across 8 planning domains</p>
+    </div>
+
+    <div class="difficulty-section">
+        <div class="difficulty-header">Easy Problems</div>
+        <div class="chart">
+            <div class="chart-row">
+                <div class="chart-label">GABAR (ours)</div>
+                <div class="chart-bar-container"><div class="chart-bar" style="width: 95.5%; background: #00A3A1;">95.5%</div></div>
+            </div>
+            <div class="chart-row">
+                <div class="chart-label">GPL</div>
+                <div class="chart-bar-container"><div class="chart-bar" style="width: 79.1%; background: #7ab8b6;">79.1%</div></div>
+            </div>
+            <div class="chart-row">
+                <div class="chart-label">ASNets</div>
+                <div class="chart-bar-container"><div class="chart-bar" style="width: 76%; background: #9ec5c4;">76.0%</div></div>
+            </div>
+            <div class="chart-row">
+                <div class="chart-label">Gemini 2.5 Pro</div>
+                <div class="chart-bar-container"><div class="chart-bar" style="width: 44%; background: #d4a0e5;">44.0%</div></div>
+            </div>
+            <div class="chart-row">
+                <div class="chart-label">OpenAI O3</div>
+                <div class="chart-bar-container"><div class="chart-bar" style="width: 33.4%; background: #c490d8;">33.4%</div></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="difficulty-section">
+        <div class="difficulty-header">Medium Problems</div>
+        <div class="chart">
+            <div class="chart-row">
+                <div class="chart-label">GABAR (ours)</div>
+                <div class="chart-bar-container"><div class="chart-bar" style="width: 92.2%; background: #00A3A1;">92.2%</div></div>
+            </div>
+            <div class="chart-row">
+                <div class="chart-label">GPL</div>
+                <div class="chart-bar-container"><div class="chart-bar small-text" style="width: 28.5%; background: #7ab8b6;">28.5%</div></div>
+            </div>
+            <div class="chart-row">
+                <div class="chart-label">ASNets</div>
+                <div class="chart-bar-container"><div class="chart-bar" style="width: 65.4%; background: #9ec5c4;">65.4%</div></div>
+            </div>
+            <div class="chart-row">
+                <div class="chart-label">Gemini 2.5 Pro</div>
+                <div class="chart-bar-container"><div class="chart-bar small-text" style="width: 17.1%; background: #d4a0e5;">17.1%</div></div>
+            </div>
+            <div class="chart-row">
+                <div class="chart-label">OpenAI O3</div>
+                <div class="chart-bar-container"><div class="chart-bar small-text" style="width: 11.6%; background: #c490d8;">11.6%</div></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="difficulty-section">
+        <div class="difficulty-header">Hard Problems (8x training size)</div>
+        <div class="chart">
+            <div class="chart-row">
+                <div class="chart-label">GABAR (ours)</div>
+                <div class="chart-bar-container"><div class="chart-bar" style="width: 89.2%; background: #00A3A1;">89.2%</div></div>
+            </div>
+            <div class="chart-row">
+                <div class="chart-label">GPL</div>
+                <div class="chart-bar-container"><div class="chart-bar small-text" style="width: 6.5%; background: #7ab8b6;">6.5%</div></div>
+            </div>
+            <div class="chart-row">
+                <div class="chart-label">ASNets</div>
+                <div class="chart-bar-container"><div class="chart-bar" style="width: 48.5%; background: #9ec5c4;">48.5%</div></div>
+            </div>
+            <div class="chart-row">
+                <div class="chart-label">Gemini 2.5 Pro</div>
+                <div class="chart-bar-container"><div class="chart-bar small-text" style="width: 3%; background: #d4a0e5;">1.5%</div></div>
+            </div>
+            <div class="chart-row">
+                <div class="chart-label">OpenAI O3</div>
+                <div class="chart-bar-container"><div class="chart-bar small-text" style="width: 2%; background: #c490d8;">0.4%</div></div>
+            </div>
+        </div>
+    </div>
+    <p class="chart-caption">GABAR maintains ~89% coverage on hard problems while baselines and LLMs collapse below 50%.</p>
 </div>
 
 <p>The coverage drop from easy to hard for GABAR is minimal: 95.5% → 89.2%. Compare this to GPL (79% → 6.5%) or state-of-the-art LLMs (33-44% → 0.4-1.5%).</p>
